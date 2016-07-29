@@ -1,2 +1,2 @@
 # Scripts
-Just a bunch of script
+Just a bunch of scripts for various usage
