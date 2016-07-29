@@ -1,0 +1,51 @@
+#!/usr/bin/expect
+# --------------------------------------------------------------------- #
+# Date:         20160719                                                #
+# Script:       check_asa_cluster.bash & check_asa_cluster.exp          #
+#                                                                       #
+# Description:  Check the status of an ASA Cluster                      #
+#               Script uses SSH to login as user, which means the user  #
+#               account needs level 15 privileges to request the        #
+#               cluster status information                              #
+# --------------------------------------------------------------------- #
+
+set hostname [lindex $argv 0]
+set username [lindex $argv 1]
+set password [lindex $argv 2]
+
+# Don't check keys
+spawn ssh -o StrictHostKeyChecking=no $username\@$hostname
+
+# Allow this script to handle ssh connection issues
+expect {
+  timeout { send_user "\nTimeout Exceeded - Check Host\n"; exit 1 }
+  eof { send_user "\nSSH Connection To $hostname Failed\n"; exit 1 }
+ "*#" {}
+ "*assword:" {
+ send "$password\n"
+ }
+}
+
+# If we're not already in enable mode, get us there
+expect {
+ "*#" {}
+ "*>" {
+ send "login\n"
+ expect "Username: "
+ send "$username\n"
+ expect "Password: "
+ send "$password\n"
+ expect "*#"
+ send "terminal pager 0\n"
+ expect "*#"
+ send "changeto system\n"
+ expect "*"
+ expect "*#"
+ send "show cluster info\n"
+ expect "*"
+ expect "*#"
+ send "exit\n"
+ }
+}
+
+exit
